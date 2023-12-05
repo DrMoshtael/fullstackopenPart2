@@ -9,6 +9,41 @@ const Person = ({ name, number }) => {
     </tr>)
 }
 
+const Persons = ({filteredPersons}) => (
+  <table>
+    <tbody>
+      {filteredPersons.map(person =>
+        <Person name={person.name} number={person.number} key={person.name} />)}
+    </tbody>
+  </table>
+)
+
+const Filter = ({ newFilter, handleFilterChange }) => (
+  <div>
+    filter shown with: <input
+      value={newFilter}
+      onChange={handleFilterChange} />
+  </div>
+)
+
+const PersonForm = ({ handleSubmission, newName, handleNameChange, newNumber, handleNumberChange }) => (
+  <form onSubmit={handleSubmission}>
+    <div>
+      name: <input
+        value={newName}
+        onChange={handleNameChange} />
+    </div>
+    <div>
+      number: <input
+        value={newNumber}
+        onChange={handleNumberChange} />
+    </div>
+    <div>
+      <button type="submit">add</button>
+    </div>
+  </form>
+)
+
 const App = () => {
   const initialPersons = [
     { name: 'Arto Hellas', number: '040-123456', id: 1 },
@@ -30,6 +65,7 @@ const App = () => {
       setFilteredPersons(updatedPersons)
       setNewName('')
       setNewNumber('')
+      setNewFilter('') //To ensure the filter matches the rendered list
     }
     else { alert(`${newName} is already added to phonebook`) }
   }
@@ -43,10 +79,10 @@ const App = () => {
   }
 
   const handleFilterChange = (event) => {
-    console.log('before',newFilter)
+    console.log('before', newFilter)
     setNewFilter(event.target.value)
-    console.log('after',newFilter)
-    setFilteredPersons(persons.filter(person=>person.name.toLowerCase().includes(event.target.value.toLowerCase())))
+    console.log('after', newFilter)
+    setFilteredPersons(persons.filter(person => person.name.toLowerCase().includes(event.target.value.toLowerCase())))
 
   }
 
@@ -59,36 +95,13 @@ const App = () => {
 
   return (
     <div>
-      <div>debug: {newFilter}</div>
       <h2>Phonebook</h2>
-      <div>
-        filter shown with: <input 
-        value={newFilter}
-        onChange={handleFilterChange} />
-      </div>
-      <h2>add new entry</h2>
-      <form onSubmit={handleSubmission}>
-        <div>
-          name: <input
-            value={newName}
-            onChange={handleNameChange} />
-        </div>
-        <div>
-          number: <input
-            value={newNumber}
-            onChange={handleNumberChange} />
-        </div>
-        <div>
-          <button type="submit">add</button>
-        </div>
-      </form>
-      <h2>Numbers</h2>
-      <table>
-        <tbody>
-          {filteredPersons.map(person =>
-            <Person name={person.name} number={person.number} key={person.name} />)}
-        </tbody>
-      </table>
+      <Filter newFilter={newFilter} handleFilterChange={handleFilterChange} />
+      <h3>add new entry</h3>
+      <PersonForm handleSubmission={handleSubmission} newName={newName} handleNameChange={handleNameChange}
+        newNumber={newNumber} handleNumberChange={handleNumberChange} />
+      <h3>Numbers</h3>
+      <Persons filteredPersons={filteredPersons}/>
     </div>
   )
 }
