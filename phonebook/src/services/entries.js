@@ -7,9 +7,15 @@ const getAll = () => {
     return (request.then(response=>response.data))
 }
 
-const postEntry = (entry) => {
+const createEntry = (entry) => {
     const request = axios.post(baseUrl, entry)
     return (request.then(response=>response.data))
 }
 
-export default {getAll, postEntry}
+const deleteEntry = (id) => {
+    console.log('deleting',id,name)
+    const request = axios.delete(`${baseUrl}/${id}`)
+    return (request.then(response => response))
+}
+
+export default {getAll, createEntry, deleteEntry}

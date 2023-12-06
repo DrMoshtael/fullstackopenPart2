@@ -2,22 +2,27 @@ import { useState } from 'react'
 import { useEffect } from 'react'
 import entryService from './services/entries'
 
-const Person = ({ name, number }) => {
+const Person = ({ name, number, id, handleDeletion }) => {
+  console.log('running Person',name,id)
   return (
     <tr>
       <td>{name}</td>
       <td>{number}</td>
+      <td><button onClick={handleDeletion}>delete</button></td>
     </tr>)
 }
 
-const Persons = ({filteredPersons}) => (
-  <table>
-    <tbody>
-      {filteredPersons.map(person =>
-        <Person name={person.name} number={person.number} key={person.name} />)}
-    </tbody>
-  </table>
-)
+const Persons = ({ personsToShow, handleDeletionFor }) => {
+  console.log('running Persons')
+  return (
+    <table>
+      <tbody>
+        {personsToShow.map(person =>
+          <Person name={person.name} number={person.number} key={person.name} id={person.id} handleDeletion={() => handleDeletionFor(person.id, person.name)} />)}
+      </tbody>
+    </table>
+  )
+}
 
 const Filter = ({ newFilter, handleFilterChange }) => (
   <div>
@@ -51,32 +56,44 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [newFilter, setNewFilter] = useState('')
-  const [filteredPersons, setFilteredPersons] = useState([])
 
-  useEffect(()=> {
+  useEffect(() => {
     entryService
       .getAll()
       .then(initialEntries => {
-        setPersons(initialEntries) 
-        setFilteredPersons(initialEntries)
+        setPersons(initialEntries)
       })
-  },[])
+  }, [])
 
   const handleSubmission = (event) => {
     event.preventDefault()
     if (!persons.map(person => person.name.toLowerCase()).includes(newName.toLowerCase())) {
-      const updatedPersons = persons.concat({ name: newName, number: newNumber })
-      setPersons(updatedPersons)
-      setFilteredPersons(updatedPersons)
-      setNewName('')
-      setNewNumber('')
-      setNewFilter('') //To ensure the filter matches the rendered list
-
-      entryService.postEntry({"name": newName, "number": newNumber})
-      .then(response=>console.log(response))
-
+      const newEntry = { "name": newName, "number": newNumber }
+      entryService
+        .createEntry(newEntry)
+        .then(returnedEntry=>{
+          setPersons(persons.concat(returnedEntry))
+          setNewName('')
+          setNewNumber('')
+          setNewFilter('')
+        })
     }
     else { alert(`${newName} is already added to phonebook`) }
+  }
+
+  const handleDeletionFor = (id, name) => {
+    if (confirm(`Delete ${name}?`)) {
+      entryService.deleteEntry(id)
+        .then(response => {
+          console.log('deleted', response)
+          entryService.getAll()
+          .then(initialEntries => {
+            setPersons(initialEntries)
+            setNewName('')
+            setNewNumber('')
+          })
+        })
+    }
   }
 
   const handleNameChange = (event) => {
@@ -88,18 +105,11 @@ const App = () => {
   }
 
   const handleFilterChange = (event) => {
-    console.log('before', newFilter)
     setNewFilter(event.target.value)
-    console.log('after', newFilter)
-    setFilteredPersons(persons.filter(person => person.name.toLowerCase().includes(event.target.value.toLowerCase())))
-
   }
 
-  // useEffect(() => {
-  //   console.log('before useEffect',newFilter)
-  //   setFilteredPersons(persons.filter(person=>person.name.toLowerCase().includes(newFilter.toLowerCase())))
-  //   console.log('after useEffect',newFilter)
-  // }, [newFilter])
+  console.log('App run')
+  const personsToShow = persons.filter(person => person.name.toLowerCase().includes(newFilter.toLowerCase()))
 
 
   return (
@@ -110,7 +120,7 @@ const App = () => {
       <PersonForm handleSubmission={handleSubmission} newName={newName} handleNameChange={handleNameChange}
         newNumber={newNumber} handleNumberChange={handleNumberChange} />
       <h3>Numbers</h3>
-      <Persons filteredPersons={filteredPersons}/>
+      <Persons personsToShow={personsToShow} handleDeletionFor={handleDeletionFor} />
     </div>
   )
 }
