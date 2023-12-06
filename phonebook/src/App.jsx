@@ -73,6 +73,10 @@ const App = () => {
       setNewName('')
       setNewNumber('')
       setNewFilter('') //To ensure the filter matches the rendered list
+
+      axios.post('http://localhost:3001/persons',{"name": newName, "number": newNumber})
+        .then(response=>console.log(response))
+
     }
     else { alert(`${newName} is already added to phonebook`) }
   }
