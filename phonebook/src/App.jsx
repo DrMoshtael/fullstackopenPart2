@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useEffect } from 'react'
-import axios from 'axios'
+import entryService from './services/entries'
 
 const Person = ({ name, number }) => {
   return (
@@ -54,14 +54,12 @@ const App = () => {
   const [filteredPersons, setFilteredPersons] = useState([])
 
   useEffect(()=> {
-    console.log('effect')
-    axios
-    .get('http://localhost:3001/persons')
-    .then(response=>{
-      console.log('promise fulfilled')
-      setPersons(response.data)
-      setFilteredPersons(response.data)
-    })
+    entryService
+      .getAll()
+      .then(initialEntries => {
+        setPersons(initialEntries) 
+        setFilteredPersons(initialEntries)
+      })
   },[])
 
   const handleSubmission = (event) => {
@@ -74,8 +72,8 @@ const App = () => {
       setNewNumber('')
       setNewFilter('') //To ensure the filter matches the rendered list
 
-      axios.post('http://localhost:3001/persons',{"name": newName, "number": newNumber})
-        .then(response=>console.log(response))
+      entryService.postEntry({"name": newName, "number": newNumber})
+      .then(response=>console.log(response))
 
     }
     else { alert(`${newName} is already added to phonebook`) }
