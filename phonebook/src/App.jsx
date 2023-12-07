@@ -50,12 +50,34 @@ const PersonForm = ({ handleSubmission, newName, handleNameChange, newNumber, ha
   </form>
 )
 
+const Notification = ({message, successful}) => {
+  if (message === null) {return null}
+
+  const notificationStyle={
+    color: successful ? 'green' : 'red',
+    background: 'lightgrey',
+    fontSize: 20,
+    borderStyle: 'solid',
+    borderRadius: 5,
+    borderWidth:3,
+    padding: 10,
+    marginBottom: 10
+  }
+  return (
+    <div className="notification" style={notificationStyle}>
+      {message}
+    </div>
+  )
+}
+
 const App = () => {
 
   const [persons, setPersons] = useState([])
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [newFilter, setNewFilter] = useState('')
+  const [notificationMessage, setNotificationMessage] = useState(null)
+  const [notificationSuccess, setNotificationSuccess] = useState(true)
 
   useEffect(() => {
     entryService
@@ -76,6 +98,9 @@ const App = () => {
           setNewName('')
           setNewNumber('')
           setNewFilter('')
+          setNotificationSuccess(true)
+          setNotificationMessage(`Added ${newName}`)
+          setTimeout(()=>setNotificationMessage(null),2000)
         })
     }
     else if (confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
@@ -94,6 +119,9 @@ const App = () => {
         setNewName('')
         setNewNumber('')
         setNewFilter('')
+        setNotificationSuccess(true)
+        setNotificationMessage(`Updated number of ${newName}`)
+        setTimeout(()=>setNotificationMessage(null),2000)
       })
     }
   }
@@ -104,6 +132,20 @@ const App = () => {
         .then(response => {
           console.log('deleted', response)
           entryService.getAll()
+          .then(initialEntries => {
+            setPersons(initialEntries)
+            setNewName('')
+            setNewNumber('')
+            setNotificationSuccess(true)
+            setNotificationMessage(`Deleted ${name}`)
+            setTimeout(()=>setNotificationMessage(null),2000)
+          })
+        })
+        .catch(error=>{
+          setNotificationSuccess(false)
+          setNotificationMessage(`${name} doesn't exist in the Phonebook`)
+          setTimeout(()=>setNotificationMessage(null),2000)
+          entryService.getAll() //Re-sync the entries with the database
           .then(initialEntries => {
             setPersons(initialEntries)
             setNewName('')
@@ -132,6 +174,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={notificationMessage} successful={notificationSuccess} />
       <Filter newFilter={newFilter} handleFilterChange={handleFilterChange} />
       <h3>add new entry</h3>
       <PersonForm handleSubmission={handleSubmission} newName={newName} handleNameChange={handleNameChange}
