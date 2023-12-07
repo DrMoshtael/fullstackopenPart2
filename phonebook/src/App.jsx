@@ -78,7 +78,24 @@ const App = () => {
           setNewFilter('')
         })
     }
-    else { alert(`${newName} is already added to phonebook`) }
+    else if (confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
+      const foundIndex = persons
+                      .map(person=>person.name.toLowerCase())
+                      .indexOf(newName.toLowerCase())
+      const foundID = persons[foundIndex].id
+      console.log('foundID',foundID)
+      const newEntry = { "name": newName, "number": newNumber }
+      entryService
+      .replaceEntry(foundID,newEntry)
+      .then(returnedEntry=>{
+        const updatedPersons = persons
+        updatedPersons[foundIndex]=returnedEntry
+        setPersons(updatedPersons)
+        setNewName('')
+        setNewNumber('')
+        setNewFilter('')
+      })
+    }
   }
 
   const handleDeletionFor = (id, name) => {
