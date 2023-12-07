@@ -58,7 +58,7 @@ function App() {
     else if (countriesFound.length > 1 && countriesFound.length < 11) setCountriesToShow(countriesFound)
     else setCountriesToShow([])
     // setCountriesToShow((countriesFound.length > 1 && countriesFound.length < 11) ? countriesFound : [])
-    
+
     console.log('handleSearch countries', countriesFound.length)
 
     if (countriesFound.length === 1) {
@@ -69,11 +69,25 @@ function App() {
     else setCountryProfile(null)
   }
 
+  const handleShow = (country) => {
+    axios
+      .get(`${baseUrl}/name/${country}`)
+      .then(response => setCountryProfile(response.data))
+  }
+
   return (
     <>
       find countries: <input value={search} onChange={handleSearch} />
       <div>
-        {countriesToShow.map(country => <p key={country}>{country}</p>)}
+        {countriesToShow.map(country => {
+          return (
+            <div key={country}>
+              <p>{country}
+                <button onClick={() => handleShow(country)}>show</button>
+              </p>
+            </div>)
+        }
+        )}
       </div>
       <CountryComponent country={countryProfile} />
     </>
