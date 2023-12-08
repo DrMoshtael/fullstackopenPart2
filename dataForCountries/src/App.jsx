@@ -1,9 +1,32 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 
+const WeatherProfile = ({ weather, weatherCodes }) => {
+  if (weather === null) { return (null) }
+
+  const weatherDescription = (weather.current.is_day) 
+  ? weatherCodes[weather.current.weather_code].day.description
+  : weatherCodes[weather.current.weather_code].night.description
+
+  const weatherIcon = (weather.current.is_day) 
+  ? weatherCodes[weather.current.weather_code].day.image
+  : weatherCodes[weather.current.weather_code].night.image
+
+  return (
+    <div>
+      <img src={weatherIcon} alt={weatherDescription} />
+      <p>Temperature: {weather.current.temperature_2m} °C</p>
+      <p>Wind: {weather.current.wind_speed_10m} m/s</p>
+      <p>Precipitation: {weather.current.precipitation} mm</p>
+
+    </div>
+  )
+}
+
+
 const CountryComponent = ({ country }) => {
-  if (country === null)
-    return null
+  if (country === null) { return null }
+
   return (
     <div>
       <h1>{country.name.common}</h1>
@@ -14,6 +37,7 @@ const CountryComponent = ({ country }) => {
         {Object.values(country.languages).map(lang => <li key={lang}>{lang}</li>)}
       </ul>
       <img src={country.flags.png} alt={country.flags.alt} />
+      <h2>Weather in {country.capital[0]}</h2>
     </div>
   )
 }
@@ -37,6 +61,8 @@ function App() {
   )
   const [countries, setCountries] = useState([])
   const [countriesToShow, setCountriesToShow] = useState([])
+  const [weather, setWeather] = useState(null)
+  const [weatherCodes, setWeatherCodes] = useState(null)
 
   const baseUrl = 'https://studies.cs.helsinki.fi/restcountries/api'
 
@@ -47,6 +73,11 @@ function App() {
         setCountries(response.data.map(country => country.name.common))
       })
       .then(console.log(countries[0]))
+
+    axios
+      .get('http://localhost:3002/weatherCodes')
+      .then(response=>{setWeatherCodes(response.data) 
+        console.log(response.data[2].day.description)})
   }, [])
 
   const handleSearch = (event) => {
@@ -62,17 +93,28 @@ function App() {
     console.log('handleSearch countries', countriesFound.length)
 
     if (countriesFound.length === 1) {
-      axios
-        .get(`${baseUrl}/name/${countriesFound[0]}`)
-        .then(response => setCountryProfile(response.data))
+      handleShow(countriesFound[0])
     }
-    else setCountryProfile(null)
+    else {
+      setCountryProfile(null)
+      setWeather(null)
+    }
   }
 
   const handleShow = (country) => {
     axios
       .get(`${baseUrl}/name/${country}`)
-      .then(response => setCountryProfile(response.data))
+      .then(response => {
+        setCountryProfile(response.data)
+        const weatherURL = `https://api.open-meteo.com/v1/forecast?latitude=${response.data.capitalInfo.latlng[0]}&longitude=${response.data.capitalInfo.latlng[1]}&current=temperature_2m,is_day,precipitation,weather_code,wind_speed_10m&wind_speed_unit=ms&forecast_days=1`
+        axios
+          .get(weatherURL)
+          .then(response => {
+            setWeather(response.data)
+            console.log('temp now', response.data.current.temperature_2m)
+          })
+      })
+    setCountriesToShow([])
   }
 
   return (
@@ -90,6 +132,7 @@ function App() {
         )}
       </div>
       <CountryComponent country={countryProfile} />
+      <WeatherProfile weather={weather} weatherCodes={weatherCodes}/>
     </>
   )
 }
