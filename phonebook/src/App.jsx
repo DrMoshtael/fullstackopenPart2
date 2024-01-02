@@ -102,6 +102,12 @@ const App = () => {
           setNotificationMessage(`Added ${newName}`)
           setTimeout(()=>setNotificationMessage(null),2000)
         })
+        .catch(error => {
+          console.log(error.response.data.error, typeof(error.response.data.error))
+          setNotificationSuccess(false)
+          setNotificationMessage(error.response.data.error)
+          setTimeout(()=>setNotificationMessage(null),2000)
+        })
     }
     else if (confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
       const foundIndex = persons
